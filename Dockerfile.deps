@@ -1,0 +1,46 @@
+# syntax=docker/dockerfile:1.7
+
+ARG ALPINE_VERSION=3.23
+ARG C3C_VERSION=v0.8.2
+
+FROM alpine:${ALPINE_VERSION}
+
+ARG C3C_VERSION
+
+ENV CMAKE_BUILD_PARALLEL_LEVEL=4 \
+    LD_LIBRARY_PATH=/usr/lib
+
+RUN apk add --no-cache \
+    abseil-cpp-dev \
+    build-base \
+    c-ares-dev \
+    clang \
+    clang-dev \
+    clang-static \
+    cmake \
+    curl \
+    git \
+    grpc-dev \
+    grpc-plugins \
+    libxml2-dev \
+    linux-headers \
+    lld \
+    lld-dev \
+    llvm-dev \
+    llvm-static \
+    ninja-is-really-ninja \
+    openssl-dev \
+    protobuf-dev \
+    re2-dev \
+    sqlite-dev \
+    zlib-dev \
+    zstd-dev
+
+RUN git clone --depth 1 --branch "${C3C_VERSION}" https://github.com/c3lang/c3c.git /tmp/c3c \
+    && cmake -S /tmp/c3c -B /tmp/c3c/build -GNinja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+    && cmake --build /tmp/c3c/build --parallel "$(nproc)" \
+    && cmake --install /tmp/c3c/build \
+    && rm -rf /tmp/c3c \
+    && c3c --version

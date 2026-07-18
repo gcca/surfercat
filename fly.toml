@@ -1,0 +1,42 @@
+app = 'surfercat'
+primary_region = 'ord'
+
+[build]
+  image = 'ghcr.io/gcca/surfercat:latest'
+
+[env]
+  DB_URL = '/app/data/surfercat.db'
+  PORT = '8000'
+  TZ = 'UTC'
+  SESSION_TARGET = 'purrboss.internal:50051'
+
+[[mounts]]
+  source = 'surfercat_data'
+  destination = '/app/data'
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type = 'requests'
+    hard_limit = 100
+    soft_limit = 80
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '256mb'
+  cpus = 1
+
+[checks]
+  [checks.health]
+    type = 'http'
+    port = 8000
+    method = 'get'
+    path = '/surfercat/healthcheck'
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '10s'

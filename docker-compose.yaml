@@ -1,0 +1,37 @@
+services:
+  purrboss:
+    image: ghcr.io/gcca/purrboss:latest
+    environment:
+      TZ: UTC
+      DB_URL: /app/data/purrboss.db
+      PORT: "50051"
+      DEFAULT_TTL_SECONDS: "2592000"
+    ports:
+      - "50051:50051"
+    volumes:
+      - purrboss_data:/app/data
+    restart: unless-stopped
+
+  surfercat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: execute
+    image: surfercat:latest
+    depends_on:
+      purrboss:
+        condition: service_healthy
+    environment:
+      TZ: UTC
+      DB_URL: /app/data/surfercat.db
+      PORT: "8000"
+      SESSION_TARGET: purrboss:50051
+    ports:
+      - "8000:8000"
+    volumes:
+      - surfercat_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  purrboss_data:
+  surfercat_data:
